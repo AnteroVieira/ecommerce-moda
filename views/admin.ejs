@@ -15,8 +15,8 @@
       <a href="/" class="text-xs font-semibold text-neutral-500 hover:text-black">&larr; Voltar à Vitrine</a>
     </div>
 
-    <!-- Formulário que envia os dados e a foto capturada -->
-    <form action="/admin/salvar" method="POST" enctype="multipart/form-data" class="space-y-4">
+    <!-- Formulário que envia os dados e a foto -->
+    <form action="/admin/salvar" method="POST" enctype="multipart/form-data" class="space-y-4" id="productForm">
       
       <div>
         <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">Nome da Peça</label>
@@ -40,12 +40,41 @@
         <input type="number" step="0.01" name="preco" required placeholder="0.00" class="w-full px-4 py-3 rounded-lg border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-black text-sm">
       </div>
 
-      <!-- Botão da Câmera Nativa -->
+      <!-- Seção da Câmera / Foto -->
       <div>
-        <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">Foto da Câmera / Dispositivo</label>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-neutral-600 mb-1">Foto do Produto</label>
         
-        <!-- O atributo capture="environment" abre a câmera traseira no celular e webcam/arquivo no PC -->
-        <input type="file" name="foto" accept="image/*" capture="environment" required id="fileInput" class="w-full text-sm text-neutral-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-black file:text-white hover:file:bg-neutral-800 cursor-pointer border border-neutral-200 rounded-lg p-2 bg-neutral-50">
+        <!-- Botão para ativar a câmera da webcam/dispositivo na tela -->
+        <div class="space-y-2">
+          <div id="camera-container" class="hidden relative rounded-lg overflow-hidden bg-black border border-neutral-200">
+            <video id="video" autoplay playsinline class="w-full h-48 object-cover"></video>
+            <button type="button" id="snap" class="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white text-black font-bold text-xs px-4 py-2 rounded-full shadow-lg hover:bg-neutral-200 transition">
+              📸 Tirar Foto
+            </button>
+          </div>
+
+          <canvas id="canvas" class="hidden"></canvas>
+          
+          <!-- Pré-visualização da foto capturada -->
+          <div id="preview-container" class="hidden">
+            <img id="preview" class="w-full h-48 object-cover rounded-lg border border-neutral-200" alt="Pré-visualização">
+            <button type="button" id="retake" class="mt-2 text-xs text-red-600 font-semibold underline">Tirar outra foto</button>
+          </div>
+
+          <!-- Botões de escolha: Ligar Câmera ou Enviar Arquivo -->
+          <div id="actions-container" class="flex gap-2">
+            <button type="button" id="start-camera" class="flex-1 bg-neutral-900 text-white text-xs py-2.5 rounded-lg font-semibold hover:bg-neutral-800 transition">
+              Abrir Câmera Ao Vivo
+            </button>
+            <label class="flex-1 text-center bg-neutral-100 text-neutral-800 border border-neutral-200 text-xs py-2.5 rounded-lg font-semibold hover:bg-neutral-200 transition cursor-pointer">
+              Enviar Arquivo
+              <input type="file" name="foto" accept="image/*" id="fileInput" class="hidden">
+            </label>
+          </div>
+          
+          <!-- Input oculto para enviar a foto tirada pela câmera web -->
+          <input type="hidden" name="fotoWebcam" id="fotoWebcam">
+        </div>
       </div>
 
       <button type="submit" class="w-full bg-black text-white py-3.5 rounded-lg font-medium hover:bg-neutral-800 transition shadow-md text-sm mt-4">
@@ -54,6 +83,71 @@
 
     </form>
   </div>
+
+  <script>
+    const startCameraButton = document.getElementById('start-camera');
+    const cameraContainer = document.getElementById('camera-container');
+    const video = document.getElementById('video');
+    const snapButton = document.getElementById('snap');
+    const canvas = document.getElementById('canvas');
+    const previewContainer = document.getElementById('preview-container');
+    const preview = document.getElementById('preview');
+    const retakeButton = document.getElementById('retake');
+    const actionsContainer = document.getElementById('actions-container');
+    const fotoWebcamInput = document.getElementById('fotoWebcam');
+    const fileInput = document.getElementById('fileInput');
+
+    let mediaStream = null;
+
+    // Ligar a câmera ao vivo
+    startCameraButton.addEventListener('click', async () => {
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+        video.srcObject = mediaStream;
+        cameraContainer.classList.remove('hidden');
+        actionsContainer.classList.add('hidden');
+      } catch (err) {
+        alert('Não foi possível acessar a câmera. Verifique as permissões do navegador.');
+      }
+    });
+
+    // Capturar a foto do vídeo
+    snapButton.addEventListener('click', () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      const dataURL = canvas.toDataURL('image/jpeg');
+      preview.src = dataURL;
+      fotoWebcamInput.value = dataURL; // Envia a imagem em base64
+
+      // Parar a câmera
+      mediaStream.getTracks().forEach(track => track.stop());
+      cameraContainer.classList.add('hidden');
+      previewContainer.classList.remove('hidden');
+    });
+
+    // Tirar outra foto
+    retakeButton.addEventListener('click', () => {
+      previewContainer.classList.add('hidden');
+      actionsContainer.classList.remove('hidden');
+      fotoWebcamInput.value = '';
+    });
+
+    // Se o usuário escolher arquivo tradicional
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          preview.src = event.target.result;
+          previewContainer.classList.remove('hidden');
+          actionsContainer.classList.add('hidden');
+        }
+        reader.readAsDataURL(e.target.files[0]);
+      }
+    });
+  </script>
 
 </body>
 </html>

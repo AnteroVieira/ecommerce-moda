@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 
 // Configurar motor de visualização EJS
 app.set('view engine', 'ejs');
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Aumentado limite para aceitar imagens em base64 da câmera
 app.use(express.static('public'));
 
 // Configuração do Banco de Dados SQLite (arquivo local)
@@ -28,7 +28,7 @@ db.run(`CREATE TABLE IF NOT EXISTS produtos (
     imagem TEXT NOT NULL
 )`);
 
-// Configuração do Multer para salvar as fotos da câmera na pasta public/uploads
+// Configuração do Multer para salvar os arquivos de foto na pasta public/uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, 'public/uploads');
@@ -70,10 +70,31 @@ app.get('/admin/novo', (req, res) => {
   res.render('admin');
 });
 
-// 3. Ação de Salvar o Produto (Recebe dados + Foto da Câmera)
+// 3. Ação de Salvar o Produto (Recebe arquivo ou foto da Webcam em Base64)
 app.post('/admin/salvar', upload.single('foto'), (req, res) => {
-  const { nome, categoria, preco } = req.body;
-  const imagem = req.file ? `/uploads/${req.file.filename}` : '/uploads/default.png';
+  const { nome, categoria, preco, fotoWebcam } = req.body;
+  let imagem = '/uploads/default.png';
+
+  if (fotoWebcam) {
+    // Se a foto veio da câmera ao vivo (Base64)
+    const matches = fotoWebcam.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
+    if (matches && matches.length === 3) {
+      const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+      const dataBuffer = Buffer.from(matches[2], 'base64');
+      const filename = `${Date.now()}.${ext}`;
+      const uploadDir = path.join(__dirname, 'public/uploads');
+      
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      fs.writeFileSync(path.join(uploadDir, filename), dataBuffer);
+      imagem = `/uploads/${filename}`;
+    }
+  } else if (req.file) {
+    // Se veio pelo upload tradicional de arquivo
+    imagem = `/uploads/${req.file.filename}`;
+  }
 
   const query = `INSERT INTO produtos (nome, categoria, preco, imagem) VALUES (?, ?, ?, ?)`;
   db.run(query, [nome, categoria, preco, imagem], (err) => {
@@ -107,7 +128,7 @@ app.post('/admin/excluir/:id', (req, res) => {
   });
 });
 
-// Iniciar Servidor na porta correta para o Codespace
+// Iniciar Servidor
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
