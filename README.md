@@ -46,3 +46,10 @@ Se você deseja clonar e rodar este repositório na sua máquina:
 1. Clone o repositório:
    ```bash
    git clone [https://github.com/AnteroVieira/ecommerce-moda.git](https://github.com/AnteroVieira/ecommerce-moda.git)
+Entre na pasta do projeto pelo terminal digitando: cd ecommerce-moda
+
+Instale as dependências digitando: npm install 
+
+Inicie o servidor de desenvolvimento:npm start
+
+Abra o navegador em: http://localhost:3000
