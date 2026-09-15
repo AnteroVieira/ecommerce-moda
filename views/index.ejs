@@ -8,8 +8,22 @@
 </head>
 <body class="bg-[#F9F9FB] text-neutral-900 font-sans antialiased min-h-screen flex flex-col justify-between">
 
+  <!-- Tela de Carregamento Elegante (Proteção visual caso o servidor acorde) -->
+  <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center transition-opacity duration-500">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-black mb-4"></div>
+    <p class="text-sm font-semibold tracking-wider uppercase text-neutral-600">Preparando sua Vitrine...</p>
+  </div>
+
+  <script>
+    window.addEventListener('load', () => {
+      const loader = document.getElementById('loading-screen');
+      loader.style.opacity = '0';
+      setTimeout(() => loader.style.display = 'none', 500);
+    });
+  </script>
+
   <!-- Header / Topo -->
-  <header class="bg-white border-b border-neutral-200 sticky top-0 z-50">
+  <header class="bg-white border-b border-neutral-200 sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
       <a href="/" class="text-xl font-black tracking-tighter uppercase">Ateliê & Moda</a>
       <a href="/admin/novo" class="bg-black text-white text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-neutral-800 transition">
