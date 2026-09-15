@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moda & Estilo | Vitrine</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#F9F9FB] text-neutral-900 font-sans antialiased min-h-screen flex flex-col justify-between">
+
+  <!-- Header / Topo -->
+  <header class="bg-white border-b border-neutral-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <a href="/" class="text-xl font-black tracking-tighter uppercase">Ateliê & Moda</a>
+      <a href="/admin/novo" class="bg-black text-white text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-neutral-800 transition">
+        + Cadastrar Produto
+      </a>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-grow">
+    
+    <!-- Título e Filtros por Categoria -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">Nova Coleção</h1>
+        <p class="text-sm text-neutral-500 mt-1">Peças exclusivas capturadas e disponíveis em tempo real.</p>
+      </div>
+
+      <!-- Select de Filtro -->
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Filtrar:</span>
+        <select onchange="window.location.href = this.value ? `/?categoria=${this.value}` : '/'" class="px-3 py-2 rounded-lg border border-neutral-200 text-sm bg-white focus:outline-none">
+          <option value="">Todas as Categorias</option>
+          <option value="Moda Feminina" <%= categoriaAtual === 'Moda Feminina' ? 'selected' : '' %>>Moda Feminina</option>
+          <option value="Moda Masculina" <%= categoriaAtual === 'Moda Masculina' ? 'selected' : '' %>>Moda Masculina</option>
+          <option value="Calçado Feminino" <%= categoriaAtual === 'Calçado Feminino' ? 'selected' : '' %>>Calçado Feminino</option>
+          <option value="Calçado Masculino" <%= categoriaAtual === 'Calçado Masculino' ? 'selected' : '' %>>Calçado Masculino</option>
+          <option value="Tecidos" <%= categoriaAtual === 'Tecidos' ? 'selected' : '' %>>Tecidos</option>
+          <option value="Moda Casa" <%= categoriaAtual === 'Moda Casa' ? 'selected' : '' %>>Moda Casa</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Grid de Produtos -->
+    <% if (produtos.length === 0) { %>
+      <div class="text-center py-20 bg-white rounded-2xl border border-neutral-200">
+        <p class="text-neutral-500 mb-4">Nenhum produto cadastrado nesta categoria ainda.</p>
+        <a href="/admin/novo" class="text-sm font-semibold underline">Cadastrar o primeiro produto agora</a>
+      </div>
+    <% } else { %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <% produtos.forEach(produto => { %>
+          <div class="bg-white rounded-xl overflow-hidden border border-neutral-200 hover:shadow-lg transition flex flex-col">
+            <div class="h-72 w-full bg-neutral-100 overflow-hidden relative">
+              <img src="<%= produto.imagem %>" alt="<%= produto.nome %>" class="w-full h-full object-cover">
+              <span class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border border-neutral-200">
+                <%= produto.categoria %>
+              </span>
+            </div>
+            <div class="p-4 flex flex-col flex-grow justify-between">
+              <div>
+                <h3 class="font-semibold text-neutral-900"><%= produto.nome %></h3>
+              </div>
+              <div class="mt-4 flex items-center justify-between">
+                <span class="text-lg font-bold">R$ <%= Number(produto.preco).toFixed(2) %></span>
+                
+                <div class="flex items-center gap-2">
+                  <button class="bg-black text-white text-xs px-3 py-2 rounded-lg font-medium hover:bg-neutral-800 transition">
+                    Comprar
+                  </button>
+                  
+                  <!-- Botão de Excluir -->
+                  <form action="/admin/excluir/<%= produto.id %>" method="POST" onsubmit="return confirm('Deseja realmente excluir este produto?');">
+                    <button type="submit" class="bg-red-50 text-red-600 border border-red-200 text-xs px-2.5 py-2 rounded-lg font-medium hover:bg-red-100 transition" title="Excluir produto">
+                      &times;
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+
+  </main>
+
+  <!-- Rodapé -->
+  <footer class="bg-white border-t border-neutral-200 py-6 text-center text-xs text-neutral-400">
+    Projeto Portfólio Comercial • Desenvolvido com Node.js e SQLite.
+  </footer>
+
+</body>
+</html>
